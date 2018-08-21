@@ -33,17 +33,19 @@ errtxt = """[ERR] 接收訊息時發生問題，正在重試…
 [ERR] {}
 [ERR] 也建議先檢查自己的 token 是否設定錯誤。"""
 
+# 設定 botHandler
+bot = botHandler(config.token)
+botInf = bot.getMe()
+
 # 若未設定 token 憑證或 bot 使用者名稱
 if config.token == "":
     raise Exception("[ERR] 您未設定 Token。")
-if config.botUsername == "":
-    raise Exception("[ERR] 您未設定機器人的 Username ID。")
+if 'result' not in botInf:
+    raise Exception("[ERR] 您機器人的 Token 設定無效。")
 
-# 設定 botHandler
-bot = botHandler(config.token)
-
-print(f"[INFO] 機器人 {config.botUsername} 成功開啟。")
-print("[INFO] 機器人資訊：{}".format(bot.getMe()))
+botUsername = "@" + botInf['result']['username']
+print(f"[INFO] 機器人 {botUsername} 成功開啟。")
+print(f"[INFO] 機器人資訊：{botInf}")
 print("[INFO] 開始接收訊息")
 
 while True:
@@ -68,13 +70,13 @@ while True:
         ))
 
         # 指令列表
-        if msg == "/help":
+        if msg == "/help" or msg == f"/help{botUsername}":
             bot.sendMessage(updates, helptxt) # 傳送說明
             continue
         
         choicePhotoOrTxt = random.choice(range(0, 3)) # 抽籤，決定要傳送的訊息
         # 若訊息包含 g、咕 或者是訊息為「/start」
-        if msg.find('g') != -1 or msg.find('咕') != -1 or msg == "/start" or msg == f"/start{config.botUsername}":
+        if msg.find('g') != -1 or msg.find('咕') != -1 or msg == "/start" or msg == f"/start{botUsername}":
             # 傳送隨機長度的咕
             if choicePhotoOrTxt == 0:
                 bot.sendMessage(updates, randomText())

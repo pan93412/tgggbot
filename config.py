@@ -6,4 +6,3 @@
 
 # 機器人設定
 token = "" # 機器人的 Token
-botUsername = "" # 機器人 Username
