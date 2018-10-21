@@ -10,7 +10,7 @@
 接著私訊您的機器人，或者是放到您的群組即可。
 '''
 
-import config
+import config as c
 import strings as s    # 匯入字串
 from libs import botHandler, randomText
 import time, sys, random
@@ -18,61 +18,72 @@ import time, sys, random
 # 相關參數
 
 # 設定 botHandler
-bot = botHandler(config.token)
+bot = botHandler(c.token)
 botInf = bot.getMe()
 
 # 若未設定 token 憑證或 bot 使用者名稱
-if config.token == "":
-    raise Exception("[ERR] 您未設定 Token。")
-if 'result' not in botInf:
-    raise Exception("[ERR] 您機器人的 Token 設定無效。")
+if c.token == "":
+    raise Exception(s.tokenNotSet)
+if "result" not in botInf:
+    raise Exception(s.tokenInvaild)
 
-botUsername = "@" + botInf['result']['username']
-print("[INFO] 機器人 {} 成功開啟。".format(botUsername))
-print("[INFO] 機器人資訊：{}".format(botInf))
-print("[INFO] 開始接收訊息")
+# 機器人初始完成顯示之訊息
+print(s.initFinished.format(botInf))
 
+# while 迴圈
 while True:
     try:
         updates = bot.getUpdates() # 抓取機器人收到的更新
 
-        if updates == False: # 若沒有更新
+        if updates == None: # 若沒有更新
             continue
+            
         if 'message' in updates[-1] and 'text' in updates[-1]['message']: # 如果接收到的訊息是文字訊息
             msg = updates[-1]['message']['text']
         else:
             continue
         
+        sender = updates[-1]['message']['id'] # 傳送者 ID
+        
         if 'username' not in updates[-1]['message']['from']:
-            updates[-1]['message']['from']['username'] = "未知" # 如果傳送訊息之使用者沒有設定 ID
+            updates[-1]['message']['from']['username'] = s.noUsername # 如果傳送訊息之使用者沒有設定 ID
         
         # 訊息記錄
-        print(infomsg.format(
-            "@" + updates[-1]['message']['from']['username'],
+        print(s.receivedMsgInfo.format(
+            updates[-1]['message']['from']['username'],
             msg,
-            time.strftime("%Y 年 %m 月 %d 日 %p %I 時 %M 分 %S 秒", time.localtime(updates[-1]['message']['date']))
+            time.strftime(s.timeFormat, time.dmtime(updates[-1]['message']['date']))
         ))
 
         # 指令列表
-        if msg == "/help" or msg == "/help" + botUsername:
-            bot.sendMessage(updates, helptxt) # 傳送說明
+        if c.detectHelp:
+          if msg == "/help" or msg == "/help" + botUsername:
+            bot.sendMessage(sender, helptxt) # 傳送說明
             continue
         
-        choicePhotoOrTxt = random.choice(range(0, 3)) # 抽籤，決定要傳送的訊息
-        # 若訊息包含 g、咕 或者是訊息為「/start」
-        if msg.find('g') != -1 or msg.find('咕') != -1 or msg == "/start" or msg == "/start" + botUsername:
-            # 傳送隨機長度的咕
+        choicePhotoOrTxt = random.choice(range(0, 3)) # 抽籤決定要傳送的訊息
+        
+        # 若訊息包含 c.detectText 中的文字
+        for i in range(c.detectText):
+          if msg.find(i) != -1:
             if choicePhotoOrTxt == 0:
-                bot.sendMessage(updates, randomText())
-            # 傳送 GIF 1
+              bot.sendMessage(sender, randomText(c.randTxt))
             elif choicePhotoOrTxt == 1:
-                bot.sendDocument(updates, "https://i.imgur.com/begraED.gif")
-            # 傳送 GIF 2
+              bot.sendDocument(sender, c.sendPhoto1)
             else:
-                bot.sendDocument(updates, "https://i.imgur.com/T0LRYrG.gif")
-            continue
+              bot.sendDocument(sender, c.sendPhoto2)
+        
+         if c.detectStart:
+           if msg == "/start" or msg == "/start@" + botInf["username"]:
+             if msg.find(i) != -1:
+               if choicePhotoOrTxt == 0:
+                 bot.sendMessage(sender, randomText(c.randTxt))
+               elif choicePhotoOrTxt == 1:
+                 bot.sendDocument(sender, c.sendPhoto1)
+               else:
+                 bot.sendDocument(sender, c.sendPhoto2)
     
     except KeyboardInterrupt:
         raise sys.exc_info()[1] # 如果使用者輸入 Ctrl-C
     except:
-        print(errtxt.format(sys.exc_info())) # 傳送 Error 訊息
+        print(s.mainHappenErr.format(sys.exc_info())) # 顯示錯誤訊息

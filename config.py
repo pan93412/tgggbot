@@ -8,7 +8,8 @@
 token = "" # 機器人的 Token  (必須設定！)
 
 detectStart = True  # 是否偵測 /start
-detectText = "咕;g" # 用分號隔開。要偵測的文字
+detectHelp  = True  # 是否偵測 /help
+detectText = ['咕', 'g'] # 用分號隔開。要偵測的文字
 
 sendTxt = "default" # 預設值為 "default"。若要自訂文字，請將 default 改成
                     # 您想要的文字。

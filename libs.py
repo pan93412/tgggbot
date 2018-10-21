@@ -11,7 +11,7 @@
 from urllib import request, parse
 import random
 import json
-import strings as _s
+import strings as s
 
 # 注意！此與 botHandler 共同運作！
 def _requester(url):
@@ -55,10 +55,10 @@ class botHandler:
     getUpdatesAPI = self.botAPI + "getUpdates"
     
     latestUpdatesRaw = _requester(getMeAPI)
-    latestUpdates = json.loads(latestUpdatesRaw.read())
+    latestUpdates = json.loads(latestUpdatesRaw.read())["result"]
     latestUpdatesRaw.close()
     
-    if len(latestUpdates["result"]) == 0:
+    if len(latestUpdates) == 0:
       return None
     else:
       print(s.receivedMessage.format(latestUpdates[-1]["message"]["from"].get("username", "unknown"))
