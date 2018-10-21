@@ -8,131 +8,114 @@
 若要用於您的程式，請標註作者 pan93412
 和此 GitHub 庫網址。
 '''
-import requests
+from urllib import request, parse
 import random
+import json
+import strings as _s
+
+# 注意！此與 botHandler 共同運作！
+def _requester(url):
+  '''發送 GET 請求至 url，並回傳一個 File 類別。'''
+  request = request.Request(url)
+  response = request.urlopen(request)
+  return response
 
 # 機器人函式
-# 需要的元件：requests
 class botHandler:
+  '''
+  bot 機器人處理類別
+  
+  bot_token: 機器人的 Token (從 @BotFather 申請)
+  '''
+  
+  def __init__(self, bot_token):
+    '''請參閱父函式說明。'''
+    self.botAPI = "http://api.telegram.org/bot{}/".format(bot_token)
+
+  def getMe(self):
+    '''取得 bot 的資訊。回傳一組 Dict 類別，包含機器人資訊。'''
+    getMeAPI = self.botAPI + "getMe"
+    responseData = _requester(getMeAPI)
+    return json.loads(responseData) # 回傳解析出的 Bot 資訊字典
+  
+  def getUpdates(self, received=True):
     '''
-    bot 機器人處理 class
-
-    bot_token
-        bot 機器人 token (@BotFather)
-    '''
-    def __init__(self, bot_token):
-        self.url = "https://api.telegram.org/bot{}/".format(bot_token)
-    def getMe(self):
-        '''取得 bot 資訊'''
-        return requests.get(self.url + "getMe").json()
-    def getUpdates(self, clean_prev_msg = True):
-        '''
-        取得 bot 抓取到的訊息
-
-        clean_prev_msg
-            是否清除過往訊息
-        '''
-        result = requests.get(self.url + "getUpdates").json()['result']
-        if len(result) != 0:
-            print("[INFO] 接收到訊息！")
-            if clean_prev_msg == True:
-                print("[INFO] 已清空接收到的訊息！")
-                requests.get(self.url + "getUpdates", params={'offset': result[-1]['update_id'] + 1}).json()
-            return result
-        else:
-            return False
-
-    def sendMessage(self, getUpdates, msg):
-        '''
-        如果不是訊息，回傳 False。
-        若是，回傳 True 並發送 msg 訊息。
-        
-        getUpdates
-            botHandler.getUpdates() 得到的內容
-
-        msg
-            欲傳送訊息
-        '''
-        if len(getUpdates) != 0:
-            if 'message' in getUpdates[-1]:
-                print("[INFO] 發送 msg！")
-                requests.get(
-                    self.url + "sendMessage",
-                    params={
-                        'chat_id': getUpdates[-1]['message']['chat']['id'],
-                        'text': msg
-                        }
-                )
-                print("[INFO] 發送完成")
-                return True
-            else:
-                print("[INFO] 不是訊息！")
-        return False
+    取得 bot 抓取到的訊息。
     
-    def sendPhoto(self, getUpdates, url):
-        '''
-        如果不是訊息，回傳 False。
-        若是，回傳 True 並發送 url 圖片。
-        
-        getUpdates
-            botHandler.getUpdates() 得到的內容
-
-        url
-            欲傳送圖片之網址
-        '''
-        if len(getUpdates) != 0:
-            if 'message' in getUpdates[-1]:
-                print("[INFO] 發送 url 圖片！")
-                requests.get(
-                    self.url + "sendPhoto",
-                    params={
-                        'chat_id': getUpdates[-1]['message']['chat']['id'],
-                        'photo': url
-                        }
-                )
-                print("[INFO] 發送完成")
-                return True
-            else:
-                print("[INFO] 不是訊息！")
-        return False
-
-    def sendDocument(self, getUpdates, doc):
-        '''
-        如果不是訊息，回傳 False。
-        若是，回傳 True 並發送 doc 文件。
-        
-        getUpdates
-            botHandler.getUpdates() 得到的內容
-
-        doc
-            欲傳送文件之網址
-        '''
-        if len(getUpdates) != 0:
-            if 'message' in getUpdates[-1]:
-                print("[INFO] 發送 doc 文件！")
-                requests.get(
-                    self.url + "sendDocument",
-                    params={
-                        'chat_id': getUpdates[-1]['message']['chat']['id'],
-                        'document': doc
-                        }
-                )
-                print("[INFO] 發送完成")
-                return True
-            else:
-                print("[INFO] 不是訊息！")
-        return False
-
-# 隨機產生同個文字的不同長度
-# 所需函式：random
-def randomText(text = "咕", ranCount = range(1, 25)):
+    received: 是否將已接收到的訊息在遠端伺服器標記為
+              「已接受」，以在下次 getUpdates() 時
+              不再出現以前接收過的訊息。
+              
+              預設值：True
+              可選值：True / False
+              
+    回傳：     如果沒有訊息，則回傳 None。如果有訊息則回傳
+              接收到訊息的 JSON 內容。
     '''
-    隨機產生同文字不同長度的字串
+    getUpdatesAPI = self.botAPI + "getUpdates"
+    
+    latestUpdatesRaw = _requester(getMeAPI)
+    latestUpdates = json.loads(latestUpdatesRaw.read())
+    latestUpdatesRaw.close()
+    
+    if len(latestUpdates["result"]) == 0:
+      return None
+    else:
+      print(s.receivedMessage.format(latestUpdates[-1]["message"]["from"].get("username", "unknown"))
+      if received:
+        theParam = {"offset": latestUpdates[-1]["update_id"] + 1}
+        _requester(getMeAPI + "?" + parse.urlencode(theParam))
+        print(s.receivedDone)
+      return latestUpdates
+        
+  def sendMessage(self, userID, msg):
+    '''
+    傳送 msg 訊息到 userID。
+
+    userID: 傳送訊息到 ID 為 userID 的使用者、群組
+            或者是頻道。
+            
+    msg:    訊息
+    
+    回傳：   僅回傳 None。
+    '''
+    
+    sendMessageAPI = self.botAPI + "sendMessage"
+    params = {"chat_id": userID, "text": msg}
+    
+    print(s.sendMsgRequested)
+    _requester(sendMessageAPI + "?" + parse.urlencode(params))
+    
+    return None
+
+  def sendDocument(self, userID, doc):
+    '''
+    傳送 doc 檔案到 userID。
+
+    userID: 傳送訊息到 ID 為 userID 的使用者、群組
+            或者是頻道。
+            
+    doc:    檔案連結。
+    
+    回傳：   僅回傳 None。
+    '''
+    
+    sendMessageAPI = self.botAPI + "sendMessage"
+    params = {"chat_id": userID, "document": doc}
+    
+    print(s.sendMsgRequested)
+    _requester(sendMessageAPI + "?" + parse.urlencode(params))
+    
+    return None
+
+def randomText(text, ranCount = range(1, 26)):
+    '''
+    隨機產生長度隨機產生的 text。
 
     text
         要產生的文字
     
     range
-        產生文字數範圍。
+        產生文字數範圍。預設範圍為 1-25。
     '''
     return text * random.choice(ranCount)

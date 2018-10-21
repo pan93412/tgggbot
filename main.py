@@ -11,27 +11,11 @@
 '''
 
 import config
+import strings as s    # 匯入字串
 from libs import botHandler, randomText
 import time, sys, random
 
 # 相關參數
-infomsg = """[INFO] -----
-[INFO] 發送者：{0:s}
-[INFO] 訊息：{1:s}
-[INFO] 時間：{2:s} (電腦時區)
-[INFO] -----"""
-
-helptxt = """《咕咕機器人教學》
-只要訊息包含「g」或「咕」，皆會觸發機器人：
-
-[其他用法]
-「/start」 (如果訊息是 /start)
-「/help」 (觸發本說明)"""
-
-errtxt = """[ERR] 接收訊息時發生問題，正在重試…
-[ERR] 若您持續碰到這個問題，請發送一個 issue 並附加以下文字：
-[ERR] {}
-[ERR] 也建議先檢查自己的 token 是否設定錯誤。"""
 
 # 設定 botHandler
 bot = botHandler(config.token)
