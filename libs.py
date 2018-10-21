@@ -16,8 +16,8 @@ import strings as s
 # 注意！此與 botHandler 共同運作！
 def _requester(url):
   '''發送 GET 請求至 url，並回傳一個 File 類別。'''
-  request = request.Request(url)
-  response = request.urlopen(request)
+  therequest = request.Request(url)
+  response = request.urlopen(therequest)
   return response
 
 # 機器人函式
@@ -35,7 +35,7 @@ class botHandler:
   def getMe(self):
     '''取得 bot 的資訊。回傳一組 Dict 類別，包含機器人資訊。'''
     getMeAPI = self.botAPI + "getMe"
-    responseData = _requester(getMeAPI)
+    responseData = _requester(getMeAPI).read()
     return json.loads(responseData) # 回傳解析出的 Bot 資訊字典
   
   def getUpdates(self, received=True):
@@ -54,17 +54,17 @@ class botHandler:
     '''
     getUpdatesAPI = self.botAPI + "getUpdates"
     
-    latestUpdatesRaw = _requester(getMeAPI)
+    latestUpdatesRaw = _requester(getUpdatesAPI)
     latestUpdates = json.loads(latestUpdatesRaw.read())["result"]
     latestUpdatesRaw.close()
     
     if len(latestUpdates) == 0:
       return None
     else:
-      print(s.receivedMessage.format(latestUpdates[-1]["message"]["from"].get("username", "unknown"))
+      print(s.receivedMessage.format(latestUpdates[-1]["message"]["from"].get("username", "unknown")))
       if received:
         theParam = {"offset": latestUpdates[-1]["update_id"] + 1}
-        _requester(getMeAPI + "?" + parse.urlencode(theParam))
+        _requester(getUpdatesAPI + "?" + parse.urlencode(theParam))
         print(s.receivedDone)
       return latestUpdates
         
@@ -85,7 +85,6 @@ class botHandler:
     
     print(s.sendMsgRequested)
     _requester(sendMessageAPI + "?" + parse.urlencode(params))
-    
     return None
 
   def sendDocument(self, userID, doc):
@@ -100,7 +99,7 @@ class botHandler:
     回傳：   僅回傳 None。
     '''
     
-    sendMessageAPI = self.botAPI + "sendMessage"
+    sendMessageAPI = self.botAPI + "sendDocument"
     params = {"chat_id": userID, "document": doc}
     
     print(s.sendMsgRequested)
